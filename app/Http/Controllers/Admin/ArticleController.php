@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ArticleController extends Controller
@@ -27,7 +28,7 @@ class ArticleController extends Controller
         $validatedData = $request->validate(
             [
                 'title'      => 'required|string|max:255',
-                'text'       => 'required',
+                'text'       => 'required|max:500',
                 'image'      => 'required|image',
             ]
         );
@@ -60,5 +61,50 @@ class ArticleController extends Controller
 
             return redirect()->back()->with('error', $exception->getMessage());
         }
+    }
+
+    public function edit(Article $article)
+    {
+        $categories = Category::all();
+        return view('admin.article.form', compact('article', 'categories'));
+    }
+
+    public function update(Request $request, Article $article)
+    {
+        $request->validate([
+                               'title' => 'required|string|max:255',
+                               'text' => 'required|string',
+                               'image' => 'nullable|image',
+                               'categories' => 'array|nullable'
+                           ]);
+
+        $article->title = $request->title;
+        $article->text = $request->text;
+
+        if ($request->hasFile('image')) {
+            // Delete old image
+            if ($article->image) {
+                Storage::disk('public')->delete($article->image);
+            }
+            $article->image = $request->file('image')->store('images', 'public');
+        }
+
+        $article->save();
+        $article->categories()->sync($request->categories);
+
+        return redirect()->route('admin.article.index')->with('success', 'Article updated successfully!');
+    }
+
+    public function destroy(Article $article)
+    {
+        // Delete image if exists
+        if ($article->image) {
+            Storage::disk('public')->delete($article->image);
+        }
+
+        $article->categories()->detach();
+        $article->delete();
+
+        return redirect()->route('index')->with('success', 'Article deleted successfully!');
     }
 }

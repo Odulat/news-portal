@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::prefix('inside')
+Route::prefix('admin')
     ->middleware('auth')
     ->group(
         function () {
@@ -25,7 +25,12 @@ Route::prefix('inside')
             Route::prefix('article')->group(
                 function () {
                     Route::post('create', [ArticleController::class, 'store'])
-                        ->name('admin.article.create');
+                        ->name('admin.article.store');
+                    Route::get('edit/{article}', [ArticleController::class, 'edit'])
+                         ->name('admin.article.edit');
+                    Route::put('{article}', [ArticleController::class, 'update'])->name('admin.article.update');
+                    Route::delete('destroy/{article}', [ArticleController::class, 'destroy'])
+                         ->name('admin.article.destroy');
                 }
             );
 

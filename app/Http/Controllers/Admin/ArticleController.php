@@ -92,7 +92,7 @@ class ArticleController extends Controller
         $article->save();
         $article->categories()->sync($request->categories);
 
-        return redirect()->route('admin.article.index')->with('success', 'Article updated successfully!');
+        return redirect()->route('index')->with('success', 'Article updated successfully!');
     }
 
     public function destroy(Article $article)
